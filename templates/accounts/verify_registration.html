@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}- Verify OTP{% endblock %}
+
+{% block content %}
+<section class="auth-panel panel">
+    <h1>Verify Email OTP</h1>
+    <p class="muted">Enter the OTP sent to your email. If your project is using console email backend, copy it from the runserver terminal.</p>
+
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="form-row">
+            <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+            {{ form.email }}
+            {% if form.email.errors %}<div class="field-error">{{ form.email.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+            <label for="{{ form.otp_code.id_for_label }}">{{ form.otp_code.label }}</label>
+            {{ form.otp_code }}
+            {% if form.otp_code.errors %}<div class="field-error">{{ form.otp_code.errors }}</div>{% endif %}
+        </div>
+
+        <div class="actions">
+            <button type="submit" name="action" value="verify" class="btn btn-primary">Verify and Continue</button>
+            <button type="submit" name="action" value="resend" class="btn btn-secondary">Resend OTP</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

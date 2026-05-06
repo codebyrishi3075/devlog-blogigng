@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}- Register{% endblock %}
+
+{% block content %}
+<section class="auth-panel panel">
+    <h1>Create Account</h1>
+    <p class="muted">Use an email address you can verify. After registration, DevLog will send a six digit OTP.</p>
+
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="form-row">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="muted small">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="field-error">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary btn-block">Send OTP</button>
+    </form>
+
+    <p class="muted small" style="margin-top: 16px;">Already registered? <a href="{% url 'login' %}">Login</a> or <a href="{% url 'verify_registration' %}">verify OTP</a>.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}- Home{% endblock %}
+
+{% block content %}
+<section class="shell">
+    <div class="hero">
+        <div>
+            <h1>DevLog</h1>
+            <p>Register, receive an OTP, verify your account, then test the same auth flow from Postman with the API endpoints below.</p>
+        </div>
+    </div>
+
+    <div class="grid">
+        <section class="panel span-4">
+            <h2>Browser Flow</h2>
+            <ul class="status-list">
+                <li><span>1. Create account</span><a href="{% url 'register' %}">Register</a></li>
+                <li><span>2. Verify OTP</span><a href="{% url 'verify_registration' %}">Verify</a></li>
+                <li><span>3. Sign in</span><a href="{% url 'login' %}">Login</a></li>
+            </ul>
+        </section>
+
+        <section class="panel span-4">
+            <h2>Current Session</h2>
+            {% if user.is_authenticated %}
+                <p><strong>{{ user.username }}</strong></p>
+                <p class="muted small">{{ user.email }}</p>
+                <ul class="status-list">
+                    <li><span>Email verified</span><strong>{{ user.is_email_verified|yesno:"Yes,No" }}</strong></li>
+                    <li><span>Phone verified</span><strong>{{ user.is_phone_verified|yesno:"Yes,No" }}</strong></li>
+                </ul>
+            {% else %}
+                <p class="muted">No active browser session.</p>
+                <div class="actions">
+                    <a class="btn btn-primary" href="{% url 'register' %}">Register</a>
+                    <a class="btn btn-secondary" href="{% url 'login' %}">Login</a>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="panel span-4">
+            <h2>Email Mode</h2>
+            <p class="muted">If OTP appears in the runserver terminal, Django is using the console email backend. Configure SMTP in <code>.env</code> to send to inbox.</p>
+            <p class="small"><code>EMAIL_HOST</code> <code>EMAIL_HOST_USER</code> <code>EMAIL_HOST_PASSWORD</code></p>
+        </section>
+
+        <section class="panel span-12">
+            <h2>Postman Endpoints</h2>
+            <div class="endpoint">
+                <span class="method">POST</span>
+                <div><code>/api/auth/register/</code><p class="muted small">Email registration. Sends OTP and waits for verification.</p></div>
+            </div>
+            <div class="endpoint">
+                <span class="method">POST</span>
+                <div><code>/api/auth/register/unified/</code><p class="muted small">Email, phone, or both. Sends OTP to configured channels.</p></div>
+            </div>
+            <div class="endpoint">
+                <span class="method">POST</span>
+                <div><code>/api/auth/register/verify/</code><p class="muted small">Verify email or phone OTP, then receive JWT tokens.</p></div>
+            </div>
+            <div class="endpoint">
+                <span class="method">POST</span>
+                <div><code>/api/auth/login/</code><p class="muted small">Login after email or phone verification.</p></div>
+            </div>
+            <div class="endpoint">
+                <span class="method">POST</span>
+                <div><code>/api/auth/otp/resend/</code><p class="muted small">Resend registration or forgot-password OTP.</p></div>
+            </div>
+        </section>
+    </div>
+</section>
+{% endblock %}

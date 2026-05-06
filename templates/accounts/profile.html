@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}- Profile{% endblock %}
+
+{% block content %}
+<section class="grid">
+    <div class="panel span-4">
+        <h1>Profile</h1>
+        {% if request.user.profile_picture %}
+            <img src="{{ request.user.profile_picture.url }}" width="96" height="96" alt="Profile picture" style="object-fit: cover; margin-bottom: 12px;">
+        {% endif %}
+        <p><strong>{{ request.user.username }}</strong></p>
+        <p class="muted small">{{ request.user.email }}</p>
+        <ul class="status-list">
+            <li><span>Email verified</span><strong>{{ request.user.is_email_verified|yesno:"Yes,No" }}</strong></li>
+            <li><span>Phone verified</span><strong>{{ request.user.is_phone_verified|yesno:"Yes,No" }}</strong></li>
+        </ul>
+    </div>
+
+    <div class="panel span-8">
+        <h2>Edit Profile</h2>
+        <form method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-row">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="field-error">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+    </div>
+</section>
+{% endblock %}
