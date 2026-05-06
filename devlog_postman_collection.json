@@ -35,7 +35,7 @@
                 "register"
               ]
             },
-            "description": "Creates a user with username, email, password, and password2. The current RegisterSerializer expects password and password2, and returns JWT tokens immediately."
+            "description": "Email-only registration. Send username, email, password, and password2 only. The endpoint creates an unverified account, sends an email OTP, and does not return JWT tokens until /api/auth/register/verify/ succeeds."
           },
           "response": [
             {
@@ -49,7 +49,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"user\": {\n    \"id\": 1,\n    \"username\": \"testuser\",\n    \"name\": \"Test User\",\n    \"email\": \"testuser@example.com\",\n    \"phone_number\": null,\n    \"date_of_birth\": null,\n    \"gender\": \"N\",\n    \"bio\": \"\",\n    \"profile_picture\": null,\n    \"is_email_verified\": false,\n    \"is_phone_verified\": false,\n    \"is_verified\": false\n  },\n  \"refresh\": \"example.refresh.token\",\n  \"access\": \"example.access.token\"\n}"
+              "body": "{\n  \"message\": \"OTP sent to email (testuser@example.com). Verify to activate your account.\",\n  \"user\": {\n    \"id\": 1,\n    \"username\": \"testuser\",\n    \"name\": \"\",\n    \"email\": \"testuser@example.com\",\n    \"phone_number\": null,\n    \"date_of_birth\": null,\n    \"gender\": \"\",\n    \"bio\": \"\",\n    \"profile_picture\": null,\n    \"is_email_verified\": false,\n    \"is_phone_verified\": false,\n    \"is_verified\": false\n  }\n}"
             }
           ]
         },

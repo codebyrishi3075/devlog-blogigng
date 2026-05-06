@@ -4,6 +4,7 @@ from .models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
     """Standard email registration."""
+    email = serializers.EmailField(required=True, allow_blank=False)
     password = serializers.CharField(write_only=True, min_length=8)
     password2 = serializers.CharField(write_only=True)
 
@@ -17,6 +18,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
     def validate_email(self, value):
+        value = value.strip()
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("This email is already registered.")
         return value

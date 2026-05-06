@@ -48,6 +48,19 @@ class OTPDeliveryTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(OTP.objects.filter(email='apiuser@example.com').exists())
 
+    def test_email_register_api_requires_email(self):
+        client = APIClient()
+
+        response = client.post('/api/auth/register/', {
+            'username': 'missingemail',
+            'password': 'Password123',
+            'password2': 'Password123',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', response.data)
+        self.assertFalse(User.objects.filter(username='missingemail').exists())
+
 
 @override_settings(
     CELERY_TASK_ALWAYS_EAGER=True,

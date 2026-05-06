@@ -161,7 +161,6 @@ STATICFILES_DIRS = [
 
 # SMTP settings for email verification and password reset
 EMAIL_DELIVERY_MODE = os.getenv('EMAIL_DELIVERY_MODE', 'auto').lower()
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
@@ -173,14 +172,20 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL') or EMAIL_HOST_USER
 EMAIL_TIMEOUT = 10
 
-if EMAIL_DELIVERY_MODE == 'console':
+HAS_SMTP_CONFIG = bool(EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)
+
+if EMAIL_DELIVERY_MODE == 'custom':
+    EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+elif EMAIL_DELIVERY_MODE == 'console':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 elif EMAIL_DELIVERY_MODE == 'smtp':
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-elif DEBUG and not (EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD):
+elif DEBUG and not HAS_SMTP_CONFIG:
     # In local DEBUG without SMTP credentials, print emails to the runserver console.
     # If SMTP credentials are configured, keep using SMTP so OTPs reach real inboxes.
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 
 # SMS settings for phone verification (using Twilio as an example)
