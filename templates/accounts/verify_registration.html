@@ -3,8 +3,8 @@
 
 {% block content %}
 <section class="auth-panel panel">
-    <h1>Verify Email OTP</h1>
-    <p class="muted">Enter the OTP sent to your email. If your project is using console email backend, copy it from the runserver terminal.</p>
+    <h1>Verify OTP</h1>
+    <p class="muted">Enter the OTP sent to your email or mobile number. If both were provided during registration, use your email.</p>
 
     <form method="POST" novalidate>
         {% csrf_token %}
@@ -16,6 +16,12 @@
             <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
             {{ form.email }}
             {% if form.email.errors %}<div class="field-error">{{ form.email.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+            <label for="{{ form.phone_number.id_for_label }}">{{ form.phone_number.label }}</label>
+            {{ form.phone_number }}
+            {% if form.phone_number.errors %}<div class="field-error">{{ form.phone_number.errors }}</div>{% endif %}
         </div>
 
         <div class="form-row">

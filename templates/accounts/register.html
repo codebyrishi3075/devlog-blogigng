@@ -4,7 +4,7 @@
 {% block content %}
 <section class="auth-panel panel">
     <h1>Create Account</h1>
-    <p class="muted">Use an email address you can verify. After registration, DevLog will send a six digit OTP.</p>
+    <p class="muted">Enter email, mobile number, or both. If both are provided, DevLog sends the OTP to email first.</p>
 
     <form method="POST" novalidate>
         {% csrf_token %}

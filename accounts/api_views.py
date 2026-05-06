@@ -24,21 +24,27 @@ class RegisterAPIView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            email = user.email.strip()
+            phone_number = (user.phone_number or '').strip()
+            channel = 'EMAIL' if email else 'SMS'
+            destination = email or phone_number
             try:
                 create_and_send_otp(
                     purpose='REGISTER',
-                    channel='EMAIL',
-                    email=user.email,
+                    channel=channel,
+                    email=email or None,
+                    phone_number=None if email else phone_number,
                     user=user,
                 )
             except Exception as e:
                 user.delete()
                 return Response(
-                    {'error': f'Account was not created because email OTP could not be sent: {e}'},
+                    {'error': f'Account was not created because OTP could not be sent: {e}'},
                     status=status.HTTP_503_SERVICE_UNAVAILABLE
                 )
             return Response({
-                'message': f'OTP sent to email ({user.email}). Verify to activate your account.',
+                'message': f'OTP sent to {channel.lower()} ({destination}). Verify to activate your account.',
+                'verification_channel': channel,
                 'user': UserSerializer(user).data,
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -78,7 +84,7 @@ class UnifiedRegisterAPIView(APIView):
 
         sent_channels = []
 
-        # Send OTP on email if provided
+        # Send OTP to one channel only. If both are provided, email has priority.
         if email:
             try:
                 create_and_send_otp(
@@ -98,8 +104,8 @@ class UnifiedRegisterAPIView(APIView):
                     status=status.HTTP_503_SERVICE_UNAVAILABLE
                 )
 
-        # Send OTP on phone if provided
-        if phone_number:
+        # Send OTP on phone only when email is not available.
+        elif phone_number:
             try:
                 create_and_send_otp(
                     purpose='REGISTER',
@@ -110,26 +116,19 @@ class UnifiedRegisterAPIView(APIView):
                 sent_channels.append(f"SMS ({phone_number})")
             except PermissionError as e:
                 # Email OTP already sent — don't delete user, just warn
-                return Response({
-                    'message': f'Account created. Email OTP sent but SMS failed: {str(e)}',
-                    'user_id': user.id,
-                }, status=status.HTTP_200_OK)
+                user.delete()
+                return Response({'error': str(e)}, status=status.HTTP_429_TOO_MANY_REQUESTS)
             except Exception as e:
-                if not sent_channels:
-                    user.delete()
-                    return Response(
-                        {'error': f'Account was not created because SMS OTP could not be sent: {e}'},
-                        status=status.HTTP_503_SERVICE_UNAVAILABLE
-                    )
-                return Response({
-                    'message': f'Account created. {", ".join(sent_channels)} OTP sent but SMS failed: {e}',
-                    'user_id': user.id,
-                    'channels': sent_channels,
-                }, status=status.HTTP_200_OK)
+                user.delete()
+                return Response(
+                    {'error': f'Account was not created because SMS OTP could not be sent: {e}'},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE
+                )
 
         return Response({
             'message': f"OTP sent to: {', '.join(sent_channels)}. Verify to activate your account.",
             'user_id': user.id,
+            'verification_channel': 'EMAIL' if email else 'SMS',
             'channels': sent_channels,
         }, status=status.HTTP_201_CREATED)
 
@@ -162,7 +161,7 @@ class VerifyRegistrationOTPAPIView(APIView):
             purpose='REGISTER',
             otp_code=otp_code,
             email=email,
-            phone_number=phone_number,
+            phone_number=None if email else phone_number,
         )
 
         if not success:
@@ -172,7 +171,7 @@ class VerifyRegistrationOTPAPIView(APIView):
         user = otp.user
         if email:
             user.is_email_verified = True
-        if phone_number:
+        elif phone_number:
             user.is_phone_verified = True
         user.save()
 
@@ -329,7 +328,7 @@ class ForgotPasswordRequestAPIView(APIView):
                 purpose='FORGOT_PASSWORD',
                 channel=channel,
                 email=email,
-                phone_number=phone_number,
+                phone_number=None if email else phone_number,
                 user=user,
             )
         except PermissionError as e:
@@ -361,7 +360,7 @@ class VerifyForgotPasswordOTPAPIView(APIView):
             purpose='FORGOT_PASSWORD',
             otp_code=data['otp_code'],
             email=data.get('email'),
-            phone_number=data.get('phone_number'),
+            phone_number=None if data.get('email') else data.get('phone_number'),
         )
 
         if not success:
@@ -452,7 +451,7 @@ class ResendOTPAPIView(APIView):
                 purpose=purpose,
                 channel=channel,
                 email=email,
-                phone_number=phone_number,
+                phone_number=None if email else phone_number,
                 user=user,
             )
         except PermissionError as e:

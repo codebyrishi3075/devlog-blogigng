@@ -3,18 +3,25 @@ from .models import User
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Standard email registration."""
-    email = serializers.EmailField(required=True, allow_blank=False)
+    """Basic registration with email or phone verification."""
+    email = serializers.EmailField(required=False, allow_blank=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True, max_length=15)
     password = serializers.CharField(write_only=True, min_length=8)
     password2 = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password2']
+        fields = ['username', 'email', 'phone_number', 'password', 'password2']
 
     def validate(self, data):
         if data['password'] != data['password2']:
             raise serializers.ValidationError("Passwords do not match.")
+        email = data.get('email', '').strip()
+        phone_number = data.get('phone_number', '').strip()
+        if not email and not phone_number:
+            raise serializers.ValidationError(
+                "At least one of email or phone_number is required."
+            )
         return data
 
     def validate_email(self, value):
@@ -23,8 +30,22 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This email is already registered.")
         return value
 
+    def validate_phone_number(self, value):
+        value = value.strip()
+        if not value:
+            return value
+        if not value.startswith('+'):
+            raise serializers.ValidationError(
+                "Phone number must be in E.164 format. Example: +919876543210"
+            )
+        if User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("This phone number is already registered.")
+        return value
+
     def create(self, validated_data):
         validated_data.pop('password2')
+        validated_data['email'] = validated_data.get('email', '').strip()
+        validated_data['phone_number'] = validated_data.get('phone_number', '').strip() or None
         return User.objects.create_user(
             **validated_data,
             is_email_verified=False,

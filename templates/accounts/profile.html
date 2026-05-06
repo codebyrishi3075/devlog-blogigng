@@ -9,15 +9,20 @@
             <img src="{{ request.user.profile_picture.url }}" width="96" height="96" alt="Profile picture" style="object-fit: cover; margin-bottom: 12px;">
         {% endif %}
         <p><strong>{{ request.user.username }}</strong></p>
-        <p class="muted small">{{ request.user.email }}</p>
+        <p class="muted small">{{ request.user.name|default:"Name not added" }}</p>
+        <p class="muted small">{{ request.user.email|default:"Email not added" }}</p>
+        <p class="muted small">{{ request.user.phone_number|default:"Mobile not added" }}</p>
         <ul class="status-list">
             <li><span>Email verified</span><strong>{{ request.user.is_email_verified|yesno:"Yes,No" }}</strong></li>
             <li><span>Phone verified</span><strong>{{ request.user.is_phone_verified|yesno:"Yes,No" }}</strong></li>
+            <li><span>Date of birth</span><strong>{{ request.user.date_of_birth|default:"-" }}</strong></li>
+            <li><span>Gender</span><strong>{{ request.user.get_gender_display|default:"-" }}</strong></li>
         </ul>
     </div>
 
     <div class="panel span-8">
-        <h2>Edit Profile</h2>
+        <h2>Edit Profile Information</h2>
+        <p class="muted">Update your identity, contact details, profile photo, and short bio.</p>
         <form method="POST" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
             {% for field in form %}
